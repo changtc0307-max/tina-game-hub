@@ -2,7 +2,7 @@ const home=document.querySelector('#home'),game=document.querySelector('#game'),
 let currentGame=null;
 function N(s){return (s||'').toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[\s　・·.'’"“”()（）,，.\/－-]/g,'').replace(/臺/g,'台')}
 function resetUI(){map.innerHTML='';map.style.display='block';document.querySelector('#heroBoard')?.remove();document.querySelector('#musicBoard')?.remove();msg.innerHTML='';missing.innerHTML='';missing.style.display='none';n.textContent='0';total.textContent='0';go.disabled=false;finish.disabled=false;ans.value='';go.onclick=null;finish.onclick=null;ans.onkeydown=null;}
-function renderFromHash(){const q=(location.hash||'').slice(1);if(['countries','capitals','japan','us','aov','831','bestards','cosmos'].includes(q)){if(currentGame===q)return;currentGame=q;resetUI();home.style.display='none';game.style.display='flex';start(q)}else{currentGame=null;game.style.display='none';home.style.display='block'}}
+function renderFromHash(){const q=(location.hash||'').slice(1);if(['countries','capitals','japan','us','aov','831','bestards','cosmos','samlee'].includes(q)){if(currentGame===q)return;currentGame=q;resetUI();home.style.display='none';game.style.display='flex';start(q)}else{currentGame=null;game.style.display='none';home.style.display='block'}}
 window.addEventListener('hashchange',renderFromHash);renderFromHash();
 function start(mode){if(mode==='countries'||mode==='capitals')world(mode);if(mode==='japan')japanGame();if(mode==='us')usGame();if(mode==='aov')aovGame();if(MUSIC_GAMES?.[mode])musicGame(mode)}
 function attachZoom(svgSel,root){svgSel.call(d3.zoom().scaleExtent([1,10]).on('zoom',e=>root.attr('transform',e.transform)))}
