@@ -6,4 +6,4 @@ const AOV_GROUPS={
 '射手':'堇 勇 凡恩 菲尼克 史蘭茲 特爾安娜絲 小丑 摩恩 琳蒂 靈靈 蘇 亥犽 卡芬妮 希露卡 蘭鐸 拉維爾 索文 緹莉'.split(' '),
 '輔助':'愛麗絲 克萊斯 夸克 朗博 海倫 提米 安奈特 皮皮 卡瑞茲 若伊 芽芽'.split(' ')
 };
-const AOV_HEROES=Object.entries(AOV_GROUPS).flatMap(([role,names])=>names.map(name=>({name,role})));
+const AOV_HEROES=Object.entries(AOV_GROUPS).flatMap(([role,names])=>names.map(name=>({name,role,group:role})));
