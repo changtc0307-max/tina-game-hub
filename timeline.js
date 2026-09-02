@@ -6,19 +6,107 @@ const TIMELINE_EVENTS=[
 ['莎士比亞出生',1564],['巴哈出生',1685],['莫札特出生',1756],['貝多芬出生',1770],['《傲慢與偏見》出版',1813],['《科學怪人》出版',1818],['《愛麗絲夢遊仙境》出版',1865],['可口可樂首次販售',1886],['現代奧運首屆舉行',1896],['迪士尼公司成立',1923],['米奇首次登上銀幕',1928],['第一屆世界盃足球賽',1930],['《亂世佳人》電影上映',1939],['披頭四成軍',1960],['《教父》上映',1972],['第一部《星際大戰》上映',1977],['MTV開播',1981],['第一本《哈利波特》出版',1997],['《鐵達尼號》電影上映',1997],['《魔戒首部曲》電影上映',2001],['Spotify推出',2008],['Netflix推出串流服務',2007],['《冰雪奇緣》上映',2013],['Pokémon GO推出',2016],
 ['黑死病席捲歐洲',1347],['君士坦丁堡陷落',1453],['馬丁路德發表九十五條論綱',1517],['西班牙無敵艦隊敗北',1588],['五月花號抵達北美',1620],['英國光榮革命',1688],['波士頓傾茶事件',1773],['美國憲法生效',1789],['海地獨立',1804],['維也納會議',1815],['希臘獨立',1830],['共產黨宣言出版',1848],['義大利王國成立',1861],['蘇伊士運河開通',1869],['電話首次跨大西洋通話',1927],['大蕭條開始',1929],['北約成立',1949],['華沙公約成立',1955],['歐洲經濟共同體成立',1957],['越戰西貢陷落',1975],['車諾比核災',1986],['香港主權移交',1997],['澳門主權移交',1999],['911事件',2001],['伊拉克戰爭爆發',2003],['全球金融海嘯',2008],['COVID-19被WHO宣布為全球大流行',2020]
 ].map((x,i)=>({id:i+1,name:x[0],year:x[1]}));
+
 function timelineYear(y){return y<0?'西元前 '+Math.abs(y)+' 年':y+' 年'}
 function timelineShuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function timelinePick5(used){let pool=TIMELINE_EVENTS.filter(x=>!used.has(x.id));if(pool.length<5){used.clear();pool=[...TIMELINE_EVENTS]}for(let tries=0;tries<80;tries++){const q=timelineShuffle(pool).slice(0,5);const ys=q.map(x=>x.year);if(Math.max(...ys)-Math.min(...ys)>=100)return q}return timelineShuffle(pool).slice(0,5)}
-function startTimeline(){home.style.display='none';game.style.display='flex';resetUI();title.textContent='⏳ 時間線排序 PK';document.querySelector('.score').style.display='none';document.querySelector('.controls').style.display='none';const box=document.querySelector('.map');box.innerHTML='<div id="timelineBoard" style="height:100%;overflow:auto;padding:14px"></div>';const b=document.getElementById('timelineBoard');let round=1,player=0,scores=[0,0],question=[],order=[],used=new Set(),aResult=null,locked=false;
-function card(x,i){return `<div class="tlCard" data-i="${i}" draggable="true" style="background:#f0f2f4;border:1px solid #e0e4e7;border-radius:12px;padding:15px 12px;margin:8px 0;font-weight:650;display:flex;align-items:center;gap:10px;touch-action:none"><span style="color:#9299a0">☰</span><span>${x.name}</span></div>`}
-function renderTurn(){locked=false;order=timelineShuffle(question);b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:19px">第 ${round}/5 題</b><b>玩家 ${player?'B':'A'}　${scores[player]} 分</b></div><div style="font-size:13px;color:#707780;margin:8px 0 13px">拖曳排序：最早 → 最晚。每個位置正確得 1 分。</div><div id="tlCards">${order.map(card).join('')}</div><button id="tlSubmit" class="go" style="width:100%;margin-top:10px">送出排序</button>`;bindSort()}
-function bindSort(){const c=document.getElementById('tlCards');let drag=null;c.querySelectorAll('.tlCard').forEach(el=>{el.ondragstart=()=>drag=el;el.ondragover=e=>{e.preventDefault();const r=el.getBoundingClientRect();c.insertBefore(drag,e.clientY<r.top+r.height/2?el:el.nextSibling)};let sy=0;el.ontouchstart=e=>{drag=el;sy=e.touches[0].clientY};el.ontouchmove=e=>{e.preventDefault();const y=e.touches[0].clientY;const target=document.elementFromPoint(e.touches[0].clientX,y)?.closest('.tlCard');if(target&&target!==drag){const r=target.getBoundingClientRect();c.insertBefore(drag,y<r.top+r.height/2?target:target.nextSibling)}sy=y}});document.getElementById('tlSubmit').onclick=submit}
-function current(){return [...document.querySelectorAll('.tlCard')].map(el=>order[+el.dataset.i])}
-function submit(){if(locked)return;if(window.TinaGuard&&!TinaGuard.confirmReveal('確定送出這次排序嗎？送出後會公布正確年代。'))return;locked=true;const mine=current(),correct=[...question].sort((a,b)=>a.year-b.year),pts=mine.reduce((s,x,i)=>s+(x.id===correct[i].id),0);scores[player]+=pts;const result={mine,pts};if(player===0)aResult=result;showResult(correct,pts)}
-function showResult(correct,pts){b.innerHTML=`<div style="display:flex;justify-content:space-between"><b>第 ${round}/5 題・玩家 ${player?'B':'A'}</b><b style="font-size:20px">${pts}/5 分</b></div><div style="margin:12px 0">${correct.map((x,i)=>{const mine=currentSafe(i);const ok=mine&&mine.id===x.id;return `<div style="padding:12px;margin:7px 0;border-radius:10px;background:${ok?'#dce9e1':'#eef0f2'}"><b>${i+1}. ${x.name}</b><div style="font-size:13px;margin-top:3px;color:#68717a">${timelineYear(x.year)} ${ok?'✓':''}</div></div>`}).join('')}</div><button id="tlNext" class="go" style="width:100%">${player===0?'交給玩家 B':'下一題'}</button>`;function currentSafe(i){return (player===0?aResult?.mine:window.__tlMine)?.[i]}if(player===1)delete window.__tlMine;document.getElementById('tlNext').onclick=next}
-const oldSubmit=submit;submit=function(){if(locked)return;if(window.TinaGuard&&!TinaGuard.confirmReveal('確定送出這次排序嗎？送出後會公布正確年代。'))return;locked=true;const mine=current(),correct=[...question].sort((a,b)=>a.year-b.year),pts=mine.reduce((s,x,i)=>s+(x.id===correct[i].id),0);scores[player]+=pts;if(player===0)aResult={mine,pts};else window.__tlMine=mine;showResult(correct,pts)}
-function next(){if(player===0){player=1;renderTurn()}else{question.forEach(x=>used.add(x.id));if(round===5)return end();round++;player=0;aResult=null;newQuestion()}}
-function newQuestion(){question=timelinePick5(used);renderTurn()}
-function end(){if(window.TinaGuard)TinaGuard.markFinished();const winner=scores[0]===scores[1]?'平手！':`玩家 ${scores[0]>scores[1]?'A':'B'} 勝！`;b.innerHTML=`<div style="text-align:center;padding:35px 10px"><div style="font-size:45px">🏆</div><h2>${winner}</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px;margin:22px auto"><div style="background:#f0f2f4;border-radius:14px;padding:20px"><b>玩家 A</b><div style="font-size:30px;font-weight:800;margin-top:6px">${scores[0]}/25</div></div><div style="background:#f0f2f4;border-radius:14px;padding:20px"><b>玩家 B</b><div style="font-size:30px;font-weight:800;margin-top:6px">${scores[1]}/25</div></div></div><button id="tlAgain" class="go" style="width:100%;max-width:400px">再玩一局</button></div>`;document.getElementById('tlAgain').onclick=()=>startTimeline()}
-if(window.TinaGuard)TinaGuard.markActive();newQuestion()}
-window.addEventListener('hashchange',()=>{if((location.hash||'').slice(1)==='timeline'){currentGame='timeline';startTimeline()}});if((location.hash||'').slice(1)==='timeline'){currentGame='timeline';startTimeline()}
+function timelinePick5(used){
+  let pool=TIMELINE_EVENTS.filter(x=>!used.has(x.id));
+  if(new Set(pool.map(x=>x.year)).size<5){used.clear();pool=[...TIMELINE_EVENTS]}
+  for(let tries=0;tries<200;tries++){
+    const q=[];
+    const years=new Set();
+    for(const x of timelineShuffle(pool)){
+      if(years.has(x.year))continue;
+      q.push(x);years.add(x.year);
+      if(q.length===5)break;
+    }
+    if(q.length===5){
+      const ys=q.map(x=>x.year);
+      if(Math.max(...ys)-Math.min(...ys)>=100)return q;
+    }
+  }
+  const q=[];
+  const years=new Set();
+  for(const x of timelineShuffle(pool)){
+    if(years.has(x.year))continue;
+    q.push(x);years.add(x.year);
+    if(q.length===5)return q;
+  }
+  return timelineShuffle(TIMELINE_EVENTS).filter((x,i,a)=>a.findIndex(y=>y.year===x.year)===i).slice(0,5);
+}
+
+function startTimeline(){
+  home.style.display='none';game.style.display='flex';resetUI();title.textContent='⏳ 時間線排序 PK';
+  document.querySelector('.score').style.display='none';document.querySelector('.controls').style.display='none';
+  const box=document.querySelector('.map');box.innerHTML='<div id="timelineBoard" style="height:100%;overflow:auto;padding:14px"></div>';
+  const b=document.getElementById('timelineBoard');
+  let round=1,player=0,scores=[0,0],question=[],order=[],used=new Set(),aResult=null,locked=false;
+
+  function card(x,i){return `<div class="tlCard" data-i="${i}" draggable="true" style="background:#f0f2f4;border:1px solid #e0e4e7;border-radius:12px;padding:15px 12px;margin:8px 0;font-weight:650;display:flex;align-items:center;gap:10px;touch-action:none"><span style="color:#9299a0">☰</span><span>${x.name}</span></div>`}
+
+  function renderTurn(){
+    locked=false;order=timelineShuffle(question);
+    b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><b style="font-size:19px">第 ${round}/5 題</b><b>玩家 ${player?'B':'A'}　累積 ${scores[player]} 分</b></div><div style="font-size:13px;color:#707780;margin:8px 0 13px">拖曳排序：最早 → 最晚。每個位置正確得 1 分。</div><div id="tlCards">${order.map(card).join('')}</div><button id="tlSubmit" class="go" style="width:100%;margin-top:10px">送出排序</button>`;
+    bindSort();
+  }
+
+  function bindSort(){
+    const c=document.getElementById('tlCards');let drag=null;
+    c.querySelectorAll('.tlCard').forEach(el=>{
+      el.ondragstart=()=>drag=el;
+      el.ondragover=e=>{e.preventDefault();const r=el.getBoundingClientRect();c.insertBefore(drag,e.clientY<r.top+r.height/2?el:el.nextSibling)};
+      el.ontouchstart=e=>{drag=el};
+      el.ontouchmove=e=>{e.preventDefault();const y=e.touches[0].clientY;const target=document.elementFromPoint(e.touches[0].clientX,y)?.closest('.tlCard');if(target&&target!==drag){const r=target.getBoundingClientRect();c.insertBefore(drag,y<r.top+r.height/2?target:target.nextSibling)}};
+    });
+    document.getElementById('tlSubmit').onclick=submit;
+  }
+
+  function current(){return [...document.querySelectorAll('.tlCard')].map(el=>order[+el.dataset.i])}
+  function scoreMine(mine,correct){return mine.reduce((s,x,i)=>s+(x.id===correct[i].id),0)}
+
+  function submit(){
+    if(locked)return;
+    const msg=player===0?'確定送出玩家 A 的排序嗎？送出後會交給玩家 B，暫時不公布答案。':'確定送出玩家 B 的排序嗎？送出後會公布本題正確年代與雙方得分。';
+    if(window.TinaGuard&&!TinaGuard.confirmReveal(msg))return;
+    locked=true;
+    const mine=current(),correct=[...question].sort((a,b)=>a.year-b.year),pts=scoreMine(mine,correct);
+    if(player===0){
+      aResult={mine,pts};
+      showHandoff();
+    }else{
+      const bResult={mine,pts};
+      scores[0]+=aResult.pts;scores[1]+=bResult.pts;
+      showResult(correct,aResult,bResult);
+    }
+  }
+
+  function showHandoff(){
+    b.innerHTML=`<div style="text-align:center;padding:38px 10px"><div style="font-size:42px">🙈</div><h2 style="margin-bottom:8px">玩家 A 已送出</h2><div style="color:#68717a;line-height:1.65;margin-bottom:22px">本題答案和分數先保密。<br>把手機交給玩家 B，同一題會重新洗牌。</div><button id="tlHandoff" class="go" style="width:100%;max-width:400px">交給玩家 B</button></div>`;
+    document.getElementById('tlHandoff').onclick=()=>{player=1;renderTurn()};
+  }
+
+  function showResult(correct,a,bResult){
+    b.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b style="font-size:19px">第 ${round}/5 題結果</b><b>A ${a.pts}/5　B ${bResult.pts}/5</b></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0"><div style="background:#f0f2f4;border-radius:11px;padding:10px;text-align:center"><b>玩家 A</b><div style="font-size:13px;margin-top:3px">累積 ${scores[0]} 分</div></div><div style="background:#f0f2f4;border-radius:11px;padding:10px;text-align:center"><b>玩家 B</b><div style="font-size:13px;margin-top:3px">累積 ${scores[1]} 分</div></div></div><div style="font-size:13px;color:#707780;margin:4px 0 8px">正確順序：最早 → 最晚</div><div>${correct.map((x,i)=>{const aOk=a.mine[i]?.id===x.id,bOk=bResult.mine[i]?.id===x.id;return `<div style="padding:12px;margin:7px 0;border-radius:10px;background:#eef0f2"><b>${i+1}. ${x.name}</b><div style="font-size:13px;margin-top:3px;color:#68717a">${timelineYear(x.year)}</div><div style="font-size:12px;margin-top:5px"><span style="color:${aOk?'#237442':'#a33a3a'}">A ${aOk?'✓':'✕'}</span>　<span style="color:${bOk?'#237442':'#a33a3a'}">B ${bOk?'✓':'✕'}</span></div></div>`}).join('')}</div><button id="tlNext" class="go" style="width:100%;margin-top:10px">${round===5?'查看最終結果':'下一題'}</button>`;
+    document.getElementById('tlNext').onclick=next;
+  }
+
+  function next(){
+    question.forEach(x=>used.add(x.id));
+    if(round===5)return end();
+    round++;player=0;aResult=null;newQuestion();
+  }
+
+  function newQuestion(){question=timelinePick5(used);renderTurn()}
+
+  function end(){
+    if(window.TinaGuard)TinaGuard.markFinished();
+    const winner=scores[0]===scores[1]?'平手！':`玩家 ${scores[0]>scores[1]?'A':'B'} 勝！`;
+    b.innerHTML=`<div style="text-align:center;padding:35px 10px"><div style="font-size:45px">🏆</div><h2>${winner}</h2><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:400px;margin:22px auto"><div style="background:#f0f2f4;border-radius:14px;padding:20px"><b>玩家 A</b><div style="font-size:30px;font-weight:800;margin-top:6px">${scores[0]}/25</div></div><div style="background:#f0f2f4;border-radius:14px;padding:20px"><b>玩家 B</b><div style="font-size:30px;font-weight:800;margin-top:6px">${scores[1]}/25</div></div></div><button id="tlAgain" class="go" style="width:100%;max-width:400px">再玩一局</button></div>`;
+    document.getElementById('tlAgain').onclick=()=>startTimeline();
+  }
+
+  if(window.TinaGuard)TinaGuard.markActive();newQuestion();
+}
+
+window.addEventListener('hashchange',()=>{if((location.hash||'').slice(1)==='timeline'){currentGame='timeline';startTimeline()}});
+if((location.hash||'').slice(1)==='timeline'){currentGame='timeline';startTimeline()}
