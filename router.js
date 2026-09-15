@@ -1,5 +1,5 @@
 (()=>{
-let ready=false,routing=false,last='',repairTimer=0;
+let ready=false,routing=false,last='',repairTimer=0,routeEntry=false,handlingPop=false;
 const q=()=>decodeURIComponent((location.hash||'').replace(/^#/,''));
 const genericPK=/^pk-(countries|capitals|japan|us|china|aov|831|bestards|cosmos|samlee|fahrenheit|sasha)$/;
 const territory=/^territory-(countries|japan|us|taiwan|china)-(area|population|density|gdp|military)$/;
@@ -28,9 +28,12 @@ function run(route,force=false){
   if(ok){last=route;verify(route);return true}homeView();setTimeout(()=>run(route,true),60);return false;
  }finally{routing=false}
 }
-window.addEventListener('hashchange',e=>{const route=q();if(!owned(route)){normalizeSpecialist();return}e.stopImmediatePropagation();run(route,true)},true);
-window.addEventListener('popstate',()=>setTimeout(()=>{const route=q();if(owned(route))run(route,true)},0),true);
-window.addEventListener('pageshow',()=>setTimeout(()=>{const route=q();if(owned(route))run(route,true)},0));
-window.TinaRouter={go(route){if(route){if(location.hash==='#'+route)return owned(route)?run(route,true):false;location.hash=route}else{history.pushState(null,'',location.pathname+location.search);run('',true)}},home(){history.replaceState(null,'',location.pathname+location.search);last='';homeView()},render(){return run(q(),true)}};
-window.addEventListener('load',()=>{ready=true;if(owned(q()))run(q(),true)});
+function enter(route){if(!route)return home();if(location.hash==='#'+route)return owned(route)?run(route,true):false;history.pushState({tinaHome:true},'',location.pathname+location.search);history.pushState({tinaRoute:route},'','#'+route);routeEntry=true;return owned(route)?run(route,true):true}
+function home(){history.replaceState({tinaHome:true},'',location.pathname+location.search);routeEntry=false;last='';homeView()}
+window.addEventListener('hashchange',e=>{if(handlingPop)return;const route=q();if(!owned(route)){normalizeSpecialist();return}e.stopImmediatePropagation();run(route,true)},true);
+window.addEventListener('popstate',()=>{if(handlingPop)return;handlingPop=true;setTimeout(()=>{try{const route=q();if(!route){routeEntry=false;last='';homeView()}else if(owned(route))run(route,true)}finally{handlingPop=false}},0)},true);
+window.addEventListener('pageshow',()=>setTimeout(()=>{const route=q();if(!route){routeEntry=false;homeView()}else if(owned(route))run(route,true)},0));
+window.TinaRouter={go:enter,home,render(){return run(q(),true)}};
+window.addEventListener('load',()=>{ready=true;const route=q();if(route){history.replaceState({tinaRoute:route},'',location.href);history.replaceState({tinaHome:true},'',location.pathname+location.search);history.pushState({tinaRoute:route},'','#'+route);routeEntry=true;if(owned(route))run(route,true)}else{history.replaceState({tinaHome:true},'',location.pathname+location.search);homeView()}});
+document.addEventListener('click',e=>{const target=e.target.closest('a[href^="#"],button');if(!target)return;let route='';if(target.matches('a[href^="#"]'))route=(target.getAttribute('href')||'').replace(/^#/,'');else{const oc=target.getAttribute('onclick')||'',m=oc.match(/location\.hash\s*=\s*['\"]([^'\"]+)/);if(m)route=m[1]}if(!route||target.closest('.back'))return;e.preventDefault();e.stopImmediatePropagation();enter(route)},true);
 })();
