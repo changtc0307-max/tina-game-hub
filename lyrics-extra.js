@@ -1,23 +1,4 @@
 (()=>{function install(){if(typeof LYRIC_BANK==='undefined'||typeof startLyricGame==='undefined'){setTimeout(install,0);return}if(window.__lyricsExtraInstalled)return;window.__lyricsExtraInstalled=true;
-// Extra verified short lyric clues. Keep each clue short; maximize distinct songs so repeat rounds stay low.
-const addClues=(artist,items)=>{const bank=LYRIC_BANK[artist]||(LYRIC_BANK[artist]=[]),bySong=new Map(bank.map(x=>[x[0],x]));for(const [song,lines] of items){if(bySong.has(song)){const row=bySong.get(song),seen=new Set(row[1]);for(const line of lines)if(!seen.has(line)){seen.add(line);row[1].push(line)}}else{const row=[song,[...lines]];bank.push(row);bySong.set(song,row)}}};
-addClues('bestards',[
-['滯留鋒',['夢見你說 明天就要放晴']],
-['夏夜煙火',['珍貴的都已不見']],
-['接住你',['也會溫柔地接住你']],
-['頑強',['就頑強地抵抗']],
-['總有一工',['總有一工 我欲陪你行']],
-['各自的模樣',['我往自由更加靠近了']],
-['離開的一路上',['我只剩下我自己']],
-['裝飾音',['你是燈光下的主角']],
-['好方法',['把你的笑好好珍藏']],
-['今天星期六',['小鹿亂撞到午夜']],
-['Easy Peasy',['跌倒的姿勢要帥氣']],
-['別走太遠',['你不要忘記']]
-]);
-addClues('831',[
-['想見你想見你想見你',['當愛情遺落成遺跡']]
-]);
 LYRIC_BANK.fahrenheit=[
 ['我有我的Young',['我有我的 young','夢想每一刻都在發光']],['夏雪',['你給的愛帶著夏天的雪','融化了心的某一邊']],['只對你有感覺',['只對你有感覺','微笑再美再甜不是你的都不特別']],['愛到',['愛到愛到愛到腦海裡全是你','愛到最後只能更愛你']],['出神入化',['這是我的時代由我給你未來','出神入化是非都被我融化']],['不會愛',['我不會愛但為你我會學','沒有你愛不會存在']],['Ti Amo',['Ti Amo Ti Amo','愛你的心無法忘掉']],['越來越愛',['越來越愛大聲表白','愛就要讓你知道']],['寂寞暴走',['我的寂寞在暴走','思念像怪獸吞沒我']],['默默',['我可以永遠笑著扮演你的配角','在你的背後自己煎熬']],['留下來',['留下來留下來','可不可以不要走']],['孤單摩天輪',['旋轉木馬停止轉動','孤單摩天輪還在等候']],['太熱',['太熱太熱愛太熱','心跳快要失控']],['心疼妳的心疼',['我心疼你的心疼','想把你的痛都帶走']],['很安靜',['我的世界突然變得很安靜','聽見自己想你的聲音']]
 ];
