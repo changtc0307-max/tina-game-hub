@@ -3,23 +3,44 @@ let bypass=false,active=false,finished=false,trap=false,finishedHash='',activeUr
 function gameVisible(){const g=document.getElementById('game');return !!g&&getComputedStyle(g).display!=='none'}
 function confirmReveal(message){return window.confirm(message||'確定要公布答案嗎？\n公布後這局就會結束，無法繼續作答。')}
 function confirmLeave(){return window.confirm('確定要離開這局嗎？\n目前的作答進度與已公布答案會消失。')}
-function markActive(){if(active&&!finished&&activeUrl===location.href)return;active=true;finished=false;finishedHash='';activeUrl=location.href;if(!trap){history.pushState({tinaGuard:true},'',activeUrl);trap=true}}
+function isGameHash(h){h=(h||'').replace(/^#/,'');return !!h&&h!=='home'}
+function armTrap(){if(trap||!isGameHash(location.hash))return;activeUrl=location.href;history.pushState({tinaGuard:true,tinaGame:location.hash},'',activeUrl);trap=true}
+function markActive(){active=true;finished=false;finishedHash='';activeUrl=location.href}
 function markFinished(){finished=true;active=false;trap=false;finishedHash=location.hash;activeUrl=''}
-window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished};
-function autoGuard(){if(gameVisible()&&location.hash&&location.hash!==finishedHash&&!active&&!finished)markActive()}
-window.addEventListener('popstate',()=>{if(bypass||!active||finished||!trap)return;trap=false;if(confirmLeave()){active=false;activeUrl='';bypass=true;history.back();setTimeout(()=>bypass=false,180)}else{bypass=true;history.forward();setTimeout(()=>{bypass=false;trap=true},180)}});
+window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished,armTrap};
+function autoGuard(){if(gameVisible()&&isGameHash(location.hash)&&location.hash!==finishedHash&&!active&&!finished)markActive()}
+// IMPORTANT: Safari/Chrome may skip history entries created by script without a user gesture.
+// Therefore the guard entry is armed from the user's actual click (below), not from markActive().
+document.addEventListener('click',e=>{if(bypass)return;const target=e.target.closest('#home button[data-hash],#home .modeBtns button,#home a.card');if(!target)return;let next='';if(target.dataset?.hash)next=target.dataset.hash;else if(target.tagName==='A')next=target.getAttribute('href')||'';else{const card=target.closest('.card'),key=(card?.getAttribute('href')||'').replace(/^#/,'');if(target.classList.contains('pkBtn'))next='#pk-'+key;else if(key)next='#'+key}if(!next||next==='#')return;queueMicrotask(()=>{if(isGameHash(location.hash)){markActive();armTrap()}})},false);
+window.addEventListener('popstate',e=>{if(bypass||finished)return;if(!active)return;
+  // If Safari respected the click-created trap, Back lands on the underlying game URL.
+  // If it skipped the trap, the hash may already be home/another route. In both cases ask once.
+  const stillGame=isGameHash(location.hash);
+  trap=false;
+  if(confirmLeave()){
+    active=false;activeUrl='';bypass=true;
+    if(stillGame)history.back();
+    else if(location.hash)location.hash='';
+    setTimeout(()=>bypass=false,220);
+  }else{
+    bypass=true;
+    if(stillGame){armTrap();}
+    else if(activeUrl){history.pushState({tinaReturn:true},'',activeUrl);trap=false;}
+    setTimeout(()=>{bypass=false;active=true;if(gameVisible())armTrap()},220);
+  }
+});
 document.addEventListener('click',e=>{if(bypass)return;const btn=e.target.closest('#finish');if(!btn||btn.disabled||!gameVisible())return;const text=(btn.textContent||'').trim();if(!/(交卷|公布答案|結束)/.test(text))return;e.preventDefault();e.stopImmediatePropagation();if(!confirmReveal())return;bypass=true;try{btn.click();markFinished()}finally{bypass=false}},true);
-document.addEventListener('click',e=>{if(bypass||!active||finished||!gameVisible())return;const back=e.target.closest('.back');if(!back)return;e.preventDefault();e.stopImmediatePropagation();if(!confirmLeave())return;active=false;trap=false;activeUrl='';bypass=true;location.hash='';setTimeout(()=>bypass=false,0)},true);
+document.addEventListener('click',e=>{if(bypass||!gameVisible())return;const back=e.target.closest('.back');if(!back)return;e.preventDefault();e.stopImmediatePropagation();if(active&&!finished&&!confirmLeave())return;active=false;finished=false;trap=false;activeUrl='';bypass=true;location.hash='';setTimeout(()=>bypass=false,80)},true);
 window.addEventListener('beforeunload',e=>{if(!active||finished||bypass)return;e.preventDefault();e.returnValue=''});
 window.addEventListener('hashchange',()=>setTimeout(autoGuard,0));
 const guardObserver=new MutationObserver(()=>{autoGuard();const f=document.getElementById('finish'),g=document.getElementById('go');if(active&&gameVisible()&&f&&g&&f.disabled&&g.disabled)markFinished()});guardObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','disabled']});
 setTimeout(autoGuard,0);
-const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-10';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-10';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-10';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-10';ui.onload=()=>setTimeout(verifyRoute,0);document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
-const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-10';document.head.appendChild(priceExtra);
+const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-11';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-11';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-11';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-11';ui.onload=()=>setTimeout(verifyRoute,0);document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
+const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-11';document.head.appendChild(priceExtra);
 const musicIds=['831','bestards','cosmos','samlee','fahrenheit','sasha'];
 function restoreBaseUI(){const controls=document.querySelector('.controls'),score=document.querySelector('.score'),map=document.getElementById('map');if(controls)controls.style.display='block';if(score)score.style.display='block';if(map)map.style.display='block'}
 function fixBaseMusicRoute(){const q=(location.hash||'').slice(1);if(!musicIds.includes(q)||typeof MUSIC_GAMES==='undefined'||!MUSIC_GAMES[q])return;const needs=!gameVisible()||document.querySelector('.controls')?.style.display==='none'||!document.getElementById('musicBoard');if(!needs)return;currentGame=q;resetUI();restoreBaseUI();home.style.display='none';game.style.display='flex';musicGame(q);markActive()}
-function loadExtendedPK(){if(extendedPkLoaded)return;extendedPkLoaded=true;const s=document.createElement('script');s.src='pk.js?v=20260915-music10';s.onload=()=>setTimeout(verifyRoute,0);document.head.appendChild(s)}
+function loadExtendedPK(){if(extendedPkLoaded)return;extendedPkLoaded=true;const s=document.createElement('script');s.src='pk.js?v=20260915-music11';s.onload=()=>setTimeout(verifyRoute,0);document.head.appendChild(s)}
 function verifyRoute(){const q=(location.hash||'').slice(1);if(!q)return;if(musicIds.includes(q)){fixBaseMusicRoute();return}const lm=q.match(/^(831|bestards|cosmos|samlee|fahrenheit|sasha)-lyrics-(guess|fill)(-pk)?$/);if(lm&&typeof startLyricGame==='function'&&!document.getElementById('lyricBoard')){currentGame=q;startLyricGame(lm[1],lm[2],!!lm[3]);return}if((q==='pk-fahrenheit'||q==='pk-sasha')&&!document.querySelector('.pkBoard')&&typeof MUSIC_GAMES!=='undefined'&&MUSIC_GAMES[q.slice(3)]){loadExtendedPK();return}if((q==='price'||q==='pk-price')&&!document.getElementById('priceBoard')){const fn=q==='price'?window.startPriceSolo:window.startPricePK;if(typeof fn==='function'){currentGame=q;fn();return}}if((q==='timeline'||q==='pk-timeline')&&!document.getElementById('timelineBoard')){const fn=q==='timeline'?window.startTimelineSolo:window.startTimelinePK;if(typeof fn==='function'){currentGame=q;fn();return}}}
 window.addEventListener('hashchange',()=>setTimeout(verifyRoute,60));musicExtra.addEventListener('load',()=>setTimeout(verifyRoute,60));setTimeout(verifyRoute,250);
 function fixPriceUI(){const card=[...document.querySelectorAll('#home .card')].find(c=>c.querySelector('h2')?.textContent.trim()==='價格猜猜看');if(card){const groups=[...card.querySelectorAll('.modeBtns')];groups.slice(1).forEach(g=>g.remove())}const board=document.getElementById('priceBoard');if(board){const old=[...board.querySelectorAll('div')].find(d=>d.children.length===0&&d.textContent.includes('越接近標準答案分數越高'));if(old&&!old.dataset.fullPriceRule){old.dataset.fullPriceRule='1';old.innerHTML='<b style="color:#68717a">計分方式｜與標準價格的誤差</b><br>≤ 5%：100 分　｜　≤ 10%：80 分<br>≤ 20%：60 分　｜　≤ 30%：40 分<br>≤ 50%：20 分　｜　&gt; 50%：0 分';old.style.lineHeight='1.75';old.style.fontSize='12px';old.style.color='#8a9198';old.style.textAlign='center'}}}
