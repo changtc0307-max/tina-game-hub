@@ -1,0 +1,21 @@
+(()=>{function install(){if(typeof MUSIC_GAMES==='undefined'){setTimeout(install,0);return}if(window.__musicExtraInstalled)return;window.__musicExtraInstalled=true;
+const add=(id,title,groups,aliases={})=>{MUSIC_GAMES[id]={title,groups,aliases};MUSIC_GAMES[id].songs=Object.entries(groups).flatMap(([group,names])=>names.map(name=>({name,group})))};
+add('fahrenheit','🔥 飛輪海作品大挑戰',{
+'飛輪海首張同名專輯':['我有我的Young','夏雪','只對你有感覺','一個人流浪','找幸福給你','愛到','2月30號見','出口','請在我後悔之前離開我','不死之謎'],
+'雙面飛輪海':['新窩','為你存在','出神入化','不會愛','Ti Amo','愛的王道','心裡有數','明日香','至少還有我','一萬個快樂','小小大人物','超喜歡你'],
+'越來越愛':['動脈','越來越愛','寂寞暴走','恆星','默默','最佳聽眾','留下來','孤單摩天輪','雨是眼淚','妳應該被珍惜'],
+'太熱':['太熱','Sexy Girl','心疼妳的心疼','繼續愛','很安靜','守護星','活得更像我','誤會','泰山程式','新生'],
+'其他正式作品':['孺子可教','佔有','謝謝你的溫柔','小神仙','Stay with you','Treasure','Touch Your Heart','ONLY YOU','恒星','第一口的快樂']
+},{'我有我的Young':['我有我的young'],'Ti Amo':['ti amo'],'Sexy Girl':['sexy girl'],'Stay with you':['stay with you'],'Treasure':['treasure'],'Touch Your Heart':['touch your heart'],'ONLY YOU':['only you'],'妳應該被珍惜':['你應該被珍惜'],'心疼妳的心疼':['心疼你的心疼']});
+add('sasha','🌙 Sasha Alex Sloan 作品大挑戰',{
+'Sad Girl EP':['Ready Yet','Runaway','Normal','Fall','Here'],
+'Loser EP':['The Only','Faking It','Older','Version of Me','Chasing Parties','Again'],
+'Self Portrait EP':['Thoughts','Dancing With Your Ghost','Too Sad to Cry','Keep On','Smiling When I Die','At Least I Look Cool','Good Enough'],
+'Only Child':['Matter To You','Only Child','House With No Mirrors','Lie','Hypochondriac','Is It Just Me?','Santa’s Real','Someone You Hate','Until It Happens To You','High School Me'],
+'I Blame The World':['Intro','I Blame The World','Adult','Live Laugh Love','Thank You!','WTF','New Normal','Global Warming','I H8 Myself','One Trick Phony','Hardest Thing'],
+'Me Again':['Me Again','Cowboys Cry','Kids','Glad You Did','Oxygen Mask','Highlights','Falling Out Of Like','Tiny’s Song (demo)','Deep','Only You Can','Don’t Laugh I’ll Cry','Good Enough','Picked First'],
+'其他正式作品':['Dancing With Your Ghost','Only','Older','Ready Yet','Runaway','when was it over?','Love Is Gone','Lie To Me','Hero','Rest','Let Go','Kiss Me','Without You','Glitter','Empty']
+},{"Santa’s Real":["Santa's Real"],"Tiny’s Song (demo)":["Tiny's Song (demo)","Tiny's Song"],"Don’t Laugh I’ll Cry":["Don't Laugh I'll Cry"],"when was it over?":["When Was It Over","when was it over"],"Falling Out Of Like":["falling out of like"]});
+// Deduplicate titles that also appear as singles/EP tracks so the enumeration board stays unambiguous.
+for(const id of ['sasha']){const g=MUSIC_GAMES[id],seen=new Set();for(const [group,names] of Object.entries(g.groups))g.groups[group]=names.filter(name=>{const k=name.toLowerCase();if(seen.has(k))return false;seen.add(k);return true});g.songs=Object.entries(g.groups).flatMap(([group,names])=>names.map(name=>({name,group})))}
+}install()})();
