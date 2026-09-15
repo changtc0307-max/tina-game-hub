@@ -21,8 +21,9 @@ document.addEventListener('click',e=>{
   bypass=true;try{location.hash=''}finally{setTimeout(()=>{bypass=false},0)}
 },true);
 
-// Preload the audited extension; it waits for pricing.js before installing its questions.
+// Load optional game extensions without changing the core index/script order.
 const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-1';document.head.appendChild(priceExtra);
+const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-1';lyrics.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-1';document.head.appendChild(ui)};document.head.appendChild(lyrics);
 
 // Price game UI guard: keep exactly one Solo/PK pair on the home card and show the full scoring table on every question.
 function fixPriceUI(){
