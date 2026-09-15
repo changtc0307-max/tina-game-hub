@@ -1,11 +1,12 @@
 // Additional audited price questions. Keep entries tied to a specific published tariff or official list price.
-(()=>{function install(){
-if(typeof PRICE_QUESTIONS==='undefined'){setTimeout(install,20);return}if(window.__priceExtraInstalled)return;window.__priceExtraInstalled=true;
+(()=>{function install(){if(typeof PRICE_QUESTIONS==='undefined'){setTimeout(install,20);return}if(window.__priceExtraInstalled)return;window.__priceExtraInstalled=true;
 const extra=[
 ['中華郵政 國內信函 21–50g','限時郵資',23,'郵資'],['中華郵政 國內信函 51–100g','限時郵資',31,'郵資'],['中華郵政 國內信函 101–250g','限時郵資',47,'郵資'],['中華郵政 國內信函 251–500g','限時郵資',79,'郵資'],['中華郵政 國內信函 501–1000g','限時郵資',119,'郵資'],['中華郵政 國內信函 1001–2000g','限時郵資',167,'郵資'],
 ['中華郵政 國內信函 20g以內','掛號附回執郵資',43,'郵資'],['中華郵政 國內信函 21–50g','掛號附回執郵資',51,'郵資'],['中華郵政 國內信函 51–100g','掛號附回執郵資',59,'郵資'],['中華郵政 國內信函 101–250g','掛號附回執郵資',75,'郵資'],['中華郵政 國內信函 251–500g','掛號附回執郵資',107,'郵資'],['中華郵政 國內信函 501–1000g','掛號附回執郵資',147,'郵資'],['中華郵政 國內信函 1001–2000g','掛號附回執郵資',195,'郵資'],
 ['中華郵政 國內包裹 5kg以內 同縣市宅配','窗口交寄',70,'郵資'],['中華郵政 國內包裹 5kg以內 本島跨縣市宅配','窗口交寄',80,'郵資'],['中華郵政 國內包裹 5kg以內 本島與外島宅配','窗口交寄',100,'郵資'],['中華郵政 國內包裹 5–10kg 同縣市宅配','窗口交寄',90,'郵資'],['中華郵政 國內包裹 5–10kg 本島跨縣市宅配','窗口交寄',100,'郵資'],['中華郵政 國內包裹 10–15kg 本島跨縣市宅配','窗口交寄',120,'郵資'],['中華郵政 國內包裹 15–20kg 本島跨縣市宅配','窗口交寄',145,'郵資'],
 ['中華郵政 國內快捷 250g以內 同縣市宅配','窗口交寄',80,'郵資'],['中華郵政 國內快捷 250g以內 本島跨縣市宅配','窗口交寄',120,'郵資'],['中華郵政 國內快捷 250g以內 本島與外島宅配','窗口交寄',140,'郵資'],['中華郵政 國內快捷 250g–1kg 同縣市宅配','窗口交寄',100,'郵資'],['中華郵政 國內快捷 250g–1kg 本島跨縣市宅配','窗口交寄',150,'郵資'],['中華郵政 國內快捷 1–5kg 本島跨縣市宅配','窗口交寄',190,'郵資'],['中華郵政 國內快捷 5–10kg 本島跨縣市宅配','窗口交寄',250,'郵資'],['中華郵政 國內快捷 10–15kg 本島跨縣市宅配','窗口交寄',320,'郵資'],['中華郵政 國內快捷 15–20kg 本島跨縣市宅配','窗口交寄',400,'郵資'],
-['中華郵政 回執費','每件',15,'郵資'],['中華郵政 回執附掛號費','每件',25,'郵資'],['中華郵政 補發回執費','每件',20,'郵資'],['中華郵政 平常函件交寄證明費','每件',20,'郵資'],['中華郵政 欠資手續費','每件',8,'郵資']];
-let id=Math.max(0,...PRICE_QUESTIONS.map(q=>q.id||0));const seen=new Set(PRICE_QUESTIONS.map(q=>q.name+'|'+q.spec));for(const x of extra){const k=x[0]+'|'+x[1];if(!seen.has(k)){seen.add(k);PRICE_QUESTIONS.push({id:++id,name:x[0],spec:x[1],price:x[2],cat:x[3],basis:'中華郵政官方資費 2026/09核對'})}}
+['中華郵政 回執費','每件',15,'郵資'],['中華郵政 回執附掛號費','每件',25,'郵資'],['中華郵政 補發回執費','每件',20,'郵資'],['中華郵政 平常函件交寄證明費','每件',20,'郵資'],['中華郵政 欠資手續費','每件',8,'郵資'],
+['AirPods 4','Apple 台灣官網售價',4490,'3C'],['AirPods 4 主動式降噪款','Apple 台灣官網售價',5990,'3C'],['AirPods Pro 3','Apple 台灣官網售價',7490,'3C'],['Apple Pencil Pro','Apple 台灣官網售價',4390,'3C'],['Apple Pencil USB-C','Apple 台灣官網售價',2690,'3C'],
+['Nintendo Switch 2 主機','任天堂台灣建議售價',15880,'遊戲'],['Nintendo Switch 2 Pokémon Pokopia 主機組合','任天堂台灣建議售價',15880,'遊戲'],['耀西與不可思議的圖鑑 Switch 2','下載版建議售價',1670,'遊戲'],['耀西與不可思議的圖鑑 Switch 2','盒裝版建議售價',1880,'遊戲'],['咚奇剛 蕉力全開 Switch 2','下載版建議售價',1880,'遊戲'],['咚奇剛 蕉力全開 Switch 2','盒裝版建議售價',2080,'遊戲'],['星之卡比 探索發現 Switch 2 Edition＋星耀世界','建議售價',1759,'遊戲'],['集合啦！動物森友會 Switch 2 Edition','建議售價',1444,'遊戲'],['異度神劍X 終極版 Switch 2 Edition','建議售價',1644,'遊戲'],['密特羅德 究極4 穿越未知 Switch 2 Edition','盒裝版建議售價',2080,'遊戲'],['密特羅德 究極4 Switch 2 Edition 升級通行證','下載版定價',210,'遊戲']];
+let id=Math.max(0,...PRICE_QUESTIONS.map(q=>q.id||0));const seen=new Set(PRICE_QUESTIONS.map(q=>q.name+'|'+q.spec));for(const x of extra){const k=x[0]+'|'+x[1];if(!seen.has(k)){seen.add(k);PRICE_QUESTIONS.push({id:++id,name:x[0],spec:x[1],price:x[2],cat:x[3],basis:'官方售價／資費 2026/09核對'})}}
 }install()})();
