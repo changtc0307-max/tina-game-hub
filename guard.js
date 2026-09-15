@@ -10,21 +10,20 @@ function autoGuard(){if(gameVisible()&&location.hash&&location.hash!==finishedHa
 function returnHome(){
   active=false;finished=false;finishedHash='';activeUrl='';bypass=true;
   try{
-    history.replaceState(null,'',location.pathname+location.search);
-    if(typeof currentGame!=='undefined')currentGame=null;
-    document.querySelectorAll('.pkBoard,.territoryBoard,#timelineBoard,#priceBoard,#lyricBoard,#heroBoard,#musicBoard').forEach(x=>x.remove());
-    if(typeof resetUI==='function')resetUI();
-    const h=document.getElementById('home'),g=document.getElementById('game');
-    if(g)g.style.display='none';if(h)h.style.display='block';
+    if(window.TinaRouter&&typeof TinaRouter.home==='function')TinaRouter.home();
+    else{
+      history.replaceState(null,'',location.pathname+location.search);
+      if(typeof currentGame!=='undefined')currentGame=null;
+      if(typeof resetUI==='function')resetUI();
+      const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block';
+    }
   }finally{setTimeout(()=>bypass=false,0)}
 }
-// Finish/reveal guard.
 document.addEventListener('click',e=>{if(bypass)return;const btn=e.target.closest('#finish');if(!btn||btn.disabled||!gameVisible())return;const text=(btn.textContent||'').trim();if(!/(交卷|公布答案|結束)/.test(text))return;e.preventDefault();e.stopImmediatePropagation();if(!confirmReveal())return;bypass=true;try{btn.click();markFinished()}finally{bypass=false}},true);
-// The in-page ‹ is deterministic: cancel leaves the current DOM untouched; confirm returns directly to the cabinet.
-// It deliberately does not use history.back(), location.hash, popstate or hashchange.
 document.addEventListener('click',e=>{if(bypass)return;const back=e.target.closest('.back');if(!back||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();if(active&&!finished&&!confirmLeave())return;returnHome()},true);
-window.addEventListener('beforeunload',e=>{if(!active||finished||bypass)return;e.preventDefault();e.returnValue=''});
+// Do not install beforeunload: on iOS Safari it can consume the browser's native Back navigation and leave the in-page guard in a stale state.
 window.addEventListener('hashchange',()=>{if(active&&!finished&&gameVisible()&&location.href!==activeUrl){active=false;activeUrl=''}setTimeout(autoGuard,0)});
+window.addEventListener('pageshow',()=>setTimeout(autoGuard,0));
 const guardObserver=new MutationObserver(()=>{autoGuard();const f=document.getElementById('finish'),g=document.getElementById('go');if(active&&gameVisible()&&f&&g&&f.disabled&&g.disabled)markFinished()});guardObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','disabled']});
 setTimeout(autoGuard,0);
 const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-8';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-8';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-8';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-8';document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
