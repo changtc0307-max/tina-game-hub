@@ -7,19 +7,13 @@ function markActive(){active=true;finished=false;finishedHash='';activeUrl=locat
 function markFinished(){finished=true;active=false;finishedHash=location.hash;activeUrl=''}
 function requestLeave(){return !active||finished||!gameVisible()||confirmLeave()}
 function clearLeave(){active=false;finished=false;finishedHash='';activeUrl=''}
-window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished,requestLeave,clearLeave};
+window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished,requestLeave,clearLeave,isActive:()=>active&&!finished&&gameVisible()};
 function autoGuard(){if(gameVisible()&&location.hash&&location.hash!==finishedHash&&!active&&!finished)markActive()}
-function returnHome(){
-  if(!requestLeave())return;
-  clearLeave();bypass=true;
-  try{
-    if(window.TinaRouter&&typeof TinaRouter.home==='function')TinaRouter.home();
-    else{history.replaceState(null,'',location.pathname+location.search);if(typeof currentGame!=='undefined')currentGame=null;if(typeof resetUI==='function')resetUI();const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block'}
-  }finally{setTimeout(()=>bypass=false,0)}
-}
+function returnHome(){if(!requestLeave())return;clearLeave();bypass=true;try{if(window.TinaRouter&&typeof TinaRouter.home==='function')TinaRouter.home();else{history.replaceState(null,'',location.pathname+location.search);if(typeof currentGame!=='undefined')currentGame=null;if(typeof resetUI==='function')resetUI();const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block'}}finally{setTimeout(()=>bypass=false,0)}}
 document.addEventListener('click',e=>{if(bypass)return;const btn=e.target.closest('#finish');if(!btn||btn.disabled||!gameVisible())return;const text=(btn.textContent||'').trim();if(!/(交卷|公布答案|結束)/.test(text))return;e.preventDefault();e.stopImmediatePropagation();if(!confirmReveal())return;bypass=true;try{btn.click();markFinished()}finally{bypass=false}},true);
 document.addEventListener('click',e=>{if(bypass)return;const back=e.target.closest('.back');if(!back||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();returnHome()},true);
-// Native Safari Back is guarded from the router's user-gesture history entry. No beforeunload is used.
+// Safari can make its browser Back leave this document entirely (for example when a game URL is the tab's first same-document entry). popstate cannot cancel that navigation, so beforeunload is the standards-based fallback for an unfinished game.
+window.addEventListener('beforeunload',e=>{if(bypass||!active||finished||!gameVisible())return;e.preventDefault();e.returnValue='';return ''});
 window.addEventListener('hashchange',()=>{if(active&&!finished&&gameVisible()&&location.href!==activeUrl){active=false;activeUrl=''}setTimeout(autoGuard,0)});
 window.addEventListener('pageshow',()=>setTimeout(autoGuard,0));
 const guardObserver=new MutationObserver(()=>{autoGuard();const f=document.getElementById('finish'),g=document.getElementById('go');if(active&&gameVisible()&&f&&g&&f.disabled&&g.disabled)markFinished()});guardObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','disabled']});
