@@ -21,5 +21,30 @@ document.addEventListener('click',e=>{
   bypass=true;try{location.hash=''}finally{setTimeout(()=>{bypass=false},0)}
 },true);
 
+// Price game UI guard: keep exactly one Solo/PK pair on the home card and show the full scoring table on every question.
+function fixPriceUI(){
+  const card=[...document.querySelectorAll('#home .card')].find(c=>c.querySelector('h2')?.textContent.trim()==='價格猜猜看');
+  if(card){
+    const groups=[...card.querySelectorAll('.modeBtns')];
+    groups.slice(1).forEach(g=>g.remove());
+    const group=groups[0];
+    if(group){
+      const singles=[...group.querySelectorAll('.singleBtn')],pks=[...group.querySelectorAll('.pkBtn')];
+      singles.slice(1).forEach(b=>b.remove());pks.slice(1).forEach(b=>b.remove());
+    }
+  }
+  const board=document.getElementById('priceBoard');
+  if(board){
+    const old=[...board.querySelectorAll('div')].find(d=>d.children.length===0&&d.textContent.includes('越接近標準答案分數越高'));
+    if(old&&!old.dataset.fullPriceRule){
+      old.dataset.fullPriceRule='1';
+      old.innerHTML='<b style="color:#68717a">計分方式｜與標準價格的誤差</b><br>≤ 5%：100 分　｜　≤ 10%：80 分<br>≤ 20%：60 分　｜　≤ 30%：40 分<br>≤ 50%：20 分　｜　&gt; 50%：0 分';
+      old.style.lineHeight='1.75';old.style.fontSize='12px';old.style.color='#8a9198';old.style.textAlign='center';
+    }
+  }
+}
+window.addEventListener('DOMContentLoaded',fixPriceUI);
+new MutationObserver(fixPriceUI).observe(document.documentElement,{childList:true,subtree:true});
+
 window.addEventListener('beforeunload',e=>{if(!gameVisible()||bypass||finished)return;e.preventDefault();e.returnValue=''});
 })();
