@@ -1,43 +1,26 @@
 (()=>{
-let ready=false,routing=false,last='',repairTimer=0,handlingPop=false,revertingPop=false;
+let ready=false,routing=false,last='',repairTimer=0;
 const q=()=>decodeURIComponent((location.hash||'').replace(/^#/,''));
 const genericPK=/^pk-(countries|capitals|japan|us|china|aov|831|bestards|cosmos|samlee|fahrenheit|sasha)$/;
 const territory=/^territory-(countries|japan|us|taiwan|china)-(area|population|density|gdp|military)$/;
 function owned(route){return !genericPK.test(route)&&!territory.test(route)}
 function gameVisible(){const g=document.getElementById('game');return !!g&&getComputedStyle(g).display!=='none'}
-function homeView(){if(typeof currentGame!=='undefined')currentGame=null;if(typeof resetUI==='function')resetUI();const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block'}
+function homeView(){clearTimeout(repairTimer);if(typeof currentGame!=='undefined')currentGame=null;if(typeof resetUI==='function')resetUI();const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h){h.style.display='block';h.style.pointerEvents='auto'}document.body.style.pointerEvents='auto'}
 function gameView(){const h=document.getElementById('home'),g=document.getElementById('game');if(h)h.style.display='none';if(g)g.style.display='flex'}
 function normalizeSpecialist(){const f=document.getElementById('finish');if(f)f.style.display=''}
 function titleFits(route){const t=(document.getElementById('title')?.textContent||'').trim();const names={countries:'世界國家',capitals:'世界首都',japan:'日本',us:'美國',taiwan:'台灣',china:'中國',aov:'傳說對決',831:'八三夭',bestards:'理想混蛋',cosmos:'宇宙人',samlee:'李聖傑',fahrenheit:'飛輪海',sasha:'Sasha Alex Sloan',price:'價格猜猜看',timeline:'時間線'};let base=route.replace(/^pk-/,'').replace(/^territory-/,'').split('-')[0].replace(/-lyrics-(guess|fill)(-pk)?$/,'');const needle=names[base];return !needle||t.includes(needle)}
 function boardFits(route){if(!route)return !gameVisible();if(route==='price'||route==='pk-price')return !!document.getElementById('priceBoard');if(route==='timeline'||route==='pk-timeline')return !!document.getElementById('timelineBoard');if(/-lyrics-(guess|fill)/.test(route))return !!document.getElementById('lyricBoard');if(territory.test(route))return !!document.querySelector('.territoryBoard');if(genericPK.test(route)||route==='pk-taiwan')return !!document.querySelector('.pkBoard');return true}
-function fireLegacy(){const ev=new HashChangeEvent('hashchange',{oldURL:location.href,newURL:location.href});window.dispatchEvent(ev)}
+function fireLegacy(){window.dispatchEvent(new HashChangeEvent('hashchange',{oldURL:location.href,newURL:location.href}))}
 function repair(route){if(q()!==route)return;if(!route){if(gameVisible())homeView();return}if(owned(route)){if(!gameVisible()||!titleFits(route)||!boardFits(route))run(route,true)}else if(!gameVisible()||!titleFits(route)||!boardFits(route)){normalizeSpecialist();fireLegacy()}}
 function verify(route){clearTimeout(repairTimer);repairTimer=setTimeout(()=>repair(route),180)}
-function run(route,force=false){
- if(!ready||routing)return false;route=route==null?q():route;if(!owned(route))return false;if(!force&&route===last&&route)return true;routing=true;
- try{
-  if(!route){last='';homeView();verify('');return true}
-  if(typeof currentGame!=='undefined')currentGame=route;if(typeof resetUI==='function')resetUI();gameView();let ok=true,m;
-  if(['countries','capitals','japan','us','aov','831','bestards','cosmos','samlee','fahrenheit','sasha'].includes(route)){if(['fahrenheit','sasha'].includes(route)&&!(window.MUSIC_GAMES&&MUSIC_GAMES[route]))ok=false;else if(typeof start==='function')start(route);else ok=false}
-  else if(route==='taiwan')ok=typeof startTaiwanSolo==='function'?(startTaiwanSolo(),true):false;
-  else if(route==='china')ok=typeof startChina==='function'?(startChina(),true):false;
-  else if(route==='price')ok=typeof startPriceSolo==='function'?(startPriceSolo(),true):false;
-  else if(route==='pk-price')ok=typeof startPricePK==='function'?(startPricePK(),true):false;
-  else if(route==='timeline')ok=typeof startTimelineSolo==='function'?(startTimelineSolo(),true):false;
-  else if(route==='pk-timeline')ok=typeof startTimelinePK==='function'?(startTimelinePK(),true):false;
-  else if(route==='pk-taiwan')ok=typeof startTaiwanPK==='function'?(startTaiwanPK(),true):false;
-  else if((m=route.match(/^(831|bestards|cosmos|samlee|fahrenheit|sasha)-lyrics-(guess|fill)(-pk)?$/)))ok=typeof startLyricGame==='function'?(startLyricGame(m[1],m[2],!!m[3]),true):false;
-  else{homeView();ok=true}
-  if(ok){last=route;verify(route);return true}homeView();setTimeout(()=>run(route,true),60);return false;
- }finally{routing=false}
-}
-function enter(route){if(!route)return home();if(location.hash==='#'+route){if(owned(route))return run(route,true);fireLegacy();return true}history.pushState({tinaHome:true},'',location.pathname+location.search);history.pushState({tinaRoute:route},'','#'+route);if(owned(route))run(route,true);else{normalizeSpecialist();fireLegacy()}verify(route);return true}
-function home(){history.replaceState({tinaHome:true},'',location.pathname+location.search);last='';if(window.TinaGuard?.clearLeave)TinaGuard.clearLeave();homeView()}
-window.addEventListener('hashchange',e=>{if(handlingPop)return;const route=q();if(!owned(route)){normalizeSpecialist();return}e.stopImmediatePropagation();run(route,true)},true);
-window.addEventListener('popstate',()=>{if(handlingPop)return;handlingPop=true;setTimeout(()=>{try{const route=q();if(revertingPop){revertingPop=false;if(route){if(owned(route))run(route,true);else fireLegacy()}return}if(!route){if(window.TinaGuard?.requestLeave&&!TinaGuard.requestLeave()){revertingPop=true;history.forward();return}if(window.TinaGuard?.clearLeave)TinaGuard.clearLeave();last='';homeView()}else if(owned(route))run(route,true);else{normalizeSpecialist();fireLegacy()}verify(route)}finally{handlingPop=false}},0)},true);
-window.addEventListener('pageshow',()=>setTimeout(()=>{const route=q();if(!route)homeView();else{if(owned(route))run(route,true);else fireLegacy()}verify(route)},0));
+function run(route,force=false){if(!ready||routing)return false;route=route==null?q():route;if(!owned(route))return false;if(!force&&route===last&&route)return true;routing=true;try{if(!route){last='';homeView();return true}if(typeof currentGame!=='undefined')currentGame=route;if(typeof resetUI==='function')resetUI();gameView();let ok=true,m;if(['countries','capitals','japan','us','aov','831','bestards','cosmos','samlee','fahrenheit','sasha'].includes(route)){if(['fahrenheit','sasha'].includes(route)&&!(window.MUSIC_GAMES&&MUSIC_GAMES[route]))ok=false;else if(typeof start==='function')start(route);else ok=false}else if(route==='taiwan')ok=typeof startTaiwanSolo==='function'?(startTaiwanSolo(),true):false;else if(route==='china')ok=typeof startChina==='function'?(startChina(),true):false;else if(route==='price')ok=typeof startPriceSolo==='function'?(startPriceSolo(),true):false;else if(route==='pk-price')ok=typeof startPricePK==='function'?(startPricePK(),true):false;else if(route==='timeline')ok=typeof startTimelineSolo==='function'?(startTimelineSolo(),true):false;else if(route==='pk-timeline')ok=typeof startTimelinePK==='function'?(startTimelinePK(),true):false;else if(route==='pk-taiwan')ok=typeof startTaiwanPK==='function'?(startTaiwanPK(),true):false;else if((m=route.match(/^(831|bestards|cosmos|samlee|fahrenheit|sasha)-lyrics-(guess|fill)(-pk)?$/)))ok=typeof startLyricGame==='function'?(startLyricGame(m[1],m[2],!!m[3]),true):false;else{homeView();ok=true}if(ok){last=route;verify(route);return true}homeView();setTimeout(()=>run(route,true),60);return false}finally{routing=false}}
+function enter(route){if(!route)return home();if(location.hash==='#'+route){if(owned(route))return run(route,true);fireLegacy();return true}location.hash=route;return true}
+function home(){if(window.TinaGuard?.clearLeave)TinaGuard.clearLeave();history.replaceState({tinaHome:true},'',location.pathname+location.search);last='';homeView()}
+window.addEventListener('hashchange',e=>{const route=q();if(!owned(route)){normalizeSpecialist();verify(route);return}e.stopImmediatePropagation();run(route,true)},true);
+window.addEventListener('popstate',()=>setTimeout(()=>{const route=q();if(!route){if(window.TinaGuard?.clearLeave)TinaGuard.clearLeave();last='';homeView();return}if(owned(route))run(route,true);else{normalizeSpecialist();fireLegacy()}verify(route)},0),true);
+window.addEventListener('pageshow',e=>setTimeout(()=>{const route=q();if(!route){if(window.TinaGuard?.clearLeave)TinaGuard.clearLeave();last='';homeView()}else if(owned(route))run(route,true);else{normalizeSpecialist();fireLegacy()}verify(route)},e.persisted?20:0));
 window.TinaRouter={go:enter,home,render(){const route=q();if(owned(route))return run(route,true);fireLegacy();return true}};
-window.addEventListener('load',()=>{ready=true;const route=q();if(route){history.replaceState({tinaHome:true},'',location.pathname+location.search);history.pushState({tinaRoute:route},'','#'+route);if(owned(route))run(route,true);else fireLegacy();verify(route)}else{history.replaceState({tinaHome:true},'',location.pathname+location.search);homeView()}});
+window.addEventListener('load',()=>{ready=true;const route=q();if(!route){history.replaceState({tinaHome:true},'',location.pathname+location.search);homeView()}else if(owned(route))run(route,true);else{normalizeSpecialist();fireLegacy()}verify(route)});
 document.addEventListener('click',e=>{const target=e.target.closest('a[href^="#"],button');if(!target)return;let route='';if(target.matches('a[href^="#"]'))route=(target.getAttribute('href')||'').replace(/^#/,'');else{const oc=target.getAttribute('onclick')||'',m=oc.match(/location\.hash\s*=\s*['\"]([^'\"]+)/);if(m)route=m[1]}if(!route||target.closest('.back'))return;e.preventDefault();e.stopImmediatePropagation();enter(route)},true);
 let reconcileTimer=0;new MutationObserver(()=>{clearTimeout(reconcileTimer);reconcileTimer=setTimeout(()=>repair(q()),120)}).observe(document.getElementById('game'),{childList:true,subtree:true});
 })();
