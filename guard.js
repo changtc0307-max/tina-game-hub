@@ -21,6 +21,9 @@ document.addEventListener('click',e=>{
   bypass=true;try{location.hash=''}finally{setTimeout(()=>{bypass=false},0)}
 },true);
 
+// Preload the audited extension; it waits for pricing.js before installing its questions.
+const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-1';document.head.appendChild(priceExtra);
+
 // Price game UI guard: keep exactly one Solo/PK pair on the home card and show the full scoring table on every question.
 function fixPriceUI(){
   const card=[...document.querySelectorAll('#home .card')].find(c=>c.querySelector('h2')?.textContent.trim()==='價格猜猜看');
