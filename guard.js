@@ -1,21 +1,22 @@
 (()=>{
-let bypass=false,active=false,finished=false,trap=false,finishedHash='',activeUrl='';
+let bypass=false,active=false,finished=false,finishedHash='',activeUrl='';
 function gameVisible(){const g=document.getElementById('game');return !!g&&getComputedStyle(g).display!=='none'}
 function confirmReveal(message){return window.confirm(message||'確定要公布答案嗎？\n公布後這局就會結束，無法繼續作答。')}
 function confirmLeave(){return window.confirm('確定要離開這局嗎？\n目前的作答進度與已公布答案會消失。')}
-function markActive(){if(active&&!finished&&activeUrl===location.href)return;active=true;finished=false;finishedHash='';activeUrl=location.href;if(!trap){history.pushState({tinaGameGuard:true,url:activeUrl},'',activeUrl);trap=true}}
-function markFinished(){finished=true;active=false;trap=false;finishedHash=location.hash;activeUrl=''}
+function markActive(){active=true;finished=false;finishedHash='';activeUrl=location.href}
+function markFinished(){finished=true;active=false;finishedHash=location.hash;activeUrl=''}
 window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished};
 function autoGuard(){if(gameVisible()&&location.hash&&location.hash!==finishedHash&&!active&&!finished)markActive()}
-window.addEventListener('popstate',()=>{if(bypass||!active||finished||!trap)return;trap=false;if(confirmLeave()){active=false;activeUrl='';bypass=true;history.back();setTimeout(()=>bypass=false,120)}else{bypass=true;history.forward();setTimeout(()=>{bypass=false;trap=true},120)}});
+// Do not create synthetic history entries. Hash routes already create real browser history,
+// so Back should simply move to the previous hash/page. The click guard below asks first.
 document.addEventListener('click',e=>{if(bypass)return;const btn=e.target.closest('#finish');if(!btn||btn.disabled||!gameVisible())return;const text=(btn.textContent||'').trim();if(!/(交卷|公布答案|結束)/.test(text))return;e.preventDefault();e.stopImmediatePropagation();if(!confirmReveal())return;bypass=true;try{btn.click();markFinished()}finally{bypass=false}},true);
-document.addEventListener('click',e=>{if(bypass||!active||finished||!gameVisible())return;const back=e.target.closest('.back');if(!back)return;e.preventDefault();e.stopImmediatePropagation();if(!confirmLeave())return;active=false;trap=false;activeUrl='';bypass=true;try{location.hash=''}finally{setTimeout(()=>bypass=false,0)}},true);
+document.addEventListener('click',e=>{if(bypass||!active||finished||!gameVisible())return;const back=e.target.closest('.back');if(!back)return;e.preventDefault();e.stopImmediatePropagation();if(!confirmLeave())return;active=false;activeUrl='';bypass=true;location.hash='';setTimeout(()=>bypass=false,0)},true);
 window.addEventListener('beforeunload',e=>{if(!active||finished||bypass)return;e.preventDefault();e.returnValue=''});
-window.addEventListener('hashchange',()=>setTimeout(autoGuard,0));
+window.addEventListener('hashchange',()=>{if(active&&!finished&&gameVisible()&&location.href!==activeUrl){active=false;activeUrl=''}setTimeout(autoGuard,0)});
 const guardObserver=new MutationObserver(()=>{autoGuard();const f=document.getElementById('finish'),g=document.getElementById('go');if(active&&gameVisible()&&f&&g&&f.disabled&&g.disabled)markFinished()});guardObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','disabled']});
 setTimeout(autoGuard,0);
-const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-7';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-7';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-7';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-7';document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
-const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-7';document.head.appendChild(priceExtra);
+const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-8';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-8';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-8';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-8';document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
+const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-8';document.head.appendChild(priceExtra);
 const musicIds=['831','bestards','cosmos','samlee','fahrenheit','sasha'];
 function fixBaseMusicRoute(){const q=(location.hash||'').slice(1);if(!musicIds.includes(q)||typeof MUSIC_GAMES==='undefined'||!MUSIC_GAMES[q])return;const controls=document.querySelector('.controls'),score=document.querySelector('.score');const needs=q==='fahrenheit'||q==='sasha'||!gameVisible()||controls?.style.display==='none'||!document.getElementById('musicBoard');if(!needs)return;currentGame=q;resetUI();if(controls)controls.style.display='block';if(score)score.style.display='block';home.style.display='none';game.style.display='flex';musicGame(q)}
 window.addEventListener('hashchange',()=>setTimeout(fixBaseMusicRoute,0));musicExtra.addEventListener('load',()=>setTimeout(fixBaseMusicRoute,0));
