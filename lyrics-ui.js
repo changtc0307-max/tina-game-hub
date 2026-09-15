@@ -1,12 +1,10 @@
-(()=>{
-if(typeof LYRIC_BANK==='undefined')return;
-LYRIC_BANK.bestards.push(['我反芻著你留下的寂寞',['我反芻著你留下的寂寞','以為終究能消化成自由','我為何還原地守候']]);
-const ids={'八三夭作品大挑戰':'831','理想混蛋作品大挑戰':'bestards','宇宙人作品大挑戰':'cosmos','李聖傑作品大挑戰':'samlee'};
-for(const card of document.querySelectorAll('#home .card')){
- const h=card.querySelector('h2'),id=h&&ids[h.textContent.trim()];if(!id||card.querySelector('.musicMenu'))continue;
- card.removeAttribute('href');card.onclick=e=>e.preventDefault();
- const menu=document.createElement('div');menu.className='musicMenu';menu.style.cssText='margin-top:12px;display:flex;flex-direction:column;gap:7px';
- const modes=[['🎵 作品大挑戰',id],['💬 看歌詞猜歌',id+'-lyrics-guess'],['✏️ 歌詞填空',id+'-lyrics-fill']];
- modes.forEach(([label,base],i)=>{const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:1.35fr .8fr .8fr;gap:5px;align-items:center';const lab=document.createElement('div');lab.textContent=label;lab.style.cssText='font-size:12px;font-weight:750;color:#4d555d;padding-left:3px';row.appendChild(lab);if(i===0){const solo=document.createElement('button');solo.textContent='開始';solo.className='singleBtn';solo.style.gridColumn='2 / 4';solo.onclick=e=>{e.preventDefault();e.stopPropagation();location.hash=base};row.appendChild(solo)}else{[['單人',''],['雙人 PK','-pk']].forEach(([txt,suf],j)=>{const b=document.createElement('button');b.textContent=txt;b.className=j?'pkBtn':'territoryBtn';b.onclick=e=>{e.preventDefault();e.stopPropagation();location.hash=base+suf};row.appendChild(b)})}menu.appendChild(row)});card.appendChild(menu)
-}
-})();
+(()=>{function install(){if(typeof MUSIC_GAMES==='undefined'){setTimeout(install,0);return}
+const meta={831:['🎸','八三夭'],bestards:['🌤️','理想混蛋'],cosmos:['🪐','宇宙人'],samlee:['🎙️','李聖傑'],fahrenheit:['🔥','飛輪海'],sasha:['🌙','Sasha Alex Sloan']};
+// Add cards for artists introduced by music-extra.js.
+for(const id of ['fahrenheit','sasha'])if(!document.querySelector(`[data-music-id="${id}"]`)){const [emoji,name]=meta[id],card=document.createElement('a');card.className='card';card.href='#'+id;card.dataset.musicId=id;card.innerHTML=`<div class="emoji">${emoji}</div><h2>${name} 音樂挑戰</h2><p>作品窮舉、看歌詞猜歌、歌詞填空。</p>`;document.querySelector('#home .grid').appendChild(card)}
+const titleToId={'八三夭作品大挑戰':'831','理想混蛋作品大挑戰':'bestards','宇宙人作品大挑戰':'cosmos','李聖傑作品大挑戰':'samlee'};
+for(const card of document.querySelectorAll('#home .card')){const h=card.querySelector('h2');let id=card.dataset.musicId||(h&&titleToId[h.textContent.trim()]);if(!id||!meta[id])continue;card.dataset.musicId=id;const [emoji,name]=meta[id];h.textContent=name+' 音樂挑戰';const p=card.querySelector('p');if(p)p.textContent='選一種玩法開始挑戰。';card.querySelectorAll('.lyricModes,.musicMenu').forEach(x=>x.remove());
+ const menu=document.createElement('div');menu.className='musicMenu';menu.style.cssText='margin-top:13px;display:flex;flex-direction:column;gap:8px';
+ const rows=[['📝 作品窮舉','把你記得的歌曲全部輸入','#'+id,null],['🎵 看歌詞猜歌','每局 5 題，依短歌詞猜歌名','#'+id+'-lyrics-guess','#'+id+'-lyrics-guess-pk'],['✏️ 歌詞填空','每局 5 題，只填被挖掉的文字','#'+id+'-lyrics-fill','#'+id+'-lyrics-fill-pk']];
+ rows.forEach(([label,desc,single,pk],i)=>{const row=document.createElement('div');row.style.cssText='border:1px solid #e3e6e8;border-radius:12px;padding:10px;background:#fafbfb';row.innerHTML=`<div style="font-weight:750;font-size:14px">${label}</div><div style="font-size:11px;color:#7a8289;margin:3px 0 8px">${desc}</div><div style="display:grid;grid-template-columns:${pk?'1fr 1fr':'1fr'};gap:6px"><button class="singleBtn" data-hash="${single}">${i===0?'開始':'單人'}</button>${pk?`<button class="pkBtn" data-hash="${pk}">雙人 PK</button>`:''}</div>`;row.querySelectorAll('button').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();location.hash=b.dataset.hash});menu.appendChild(row)});card.appendChild(menu);card.onclick=e=>{if(e.target.closest('button'))return;e.preventDefault()};}
+}install()})();
