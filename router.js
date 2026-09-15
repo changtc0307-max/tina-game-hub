@@ -6,6 +6,7 @@ const territory=/^territory-(countries|japan|us|taiwan|china)-(area|population|d
 function owned(route){return !genericPK.test(route)&&!territory.test(route)}
 function homeView(){if(typeof currentGame!=='undefined')currentGame=null;if(typeof resetUI==='function')resetUI();const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block'}
 function gameView(){const h=document.getElementById('home'),g=document.getElementById('game');if(h)h.style.display='none';if(g)g.style.display='flex'}
+function normalizeSpecialist(){const f=document.getElementById('finish');if(f)f.style.display=''}
 function run(route,force=false){
  if(!ready||routing)return false;route=route==null?q():route;if(!owned(route))return false;if(!force&&route===last&&route)return true;routing=true;
  try{
@@ -24,7 +25,7 @@ function run(route,force=false){
   if(ok){last=route;return true}homeView();setTimeout(()=>run(route,true),60);return false;
  }finally{routing=false}
 }
-window.addEventListener('hashchange',e=>{const route=q();if(!owned(route))return;e.stopImmediatePropagation();run(route,true)},true);
+window.addEventListener('hashchange',e=>{const route=q();if(!owned(route)){normalizeSpecialist();return}e.stopImmediatePropagation();run(route,true)},true);
 window.addEventListener('popstate',()=>setTimeout(()=>{if(owned(q()))run(q(),true)},0),true);
 window.TinaRouter={go(route){if(route){if(location.hash==='#'+route)return owned(route)?run(route,true):false;location.hash=route}else{history.pushState(null,'',location.pathname+location.search);run('',true)}},home(){history.replaceState(null,'',location.pathname+location.search);run('',true)},render(){return run(q(),true)}};
 window.addEventListener('load',()=>{ready=true;if(owned(q()))run(q(),true)});
