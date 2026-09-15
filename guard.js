@@ -7,10 +7,22 @@ function markActive(){active=true;finished=false;finishedHash='';activeUrl=locat
 function markFinished(){finished=true;active=false;finishedHash=location.hash;activeUrl=''}
 window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished};
 function autoGuard(){if(gameVisible()&&location.hash&&location.hash!==finishedHash&&!active&&!finished)markActive()}
-// Do not create synthetic history entries. Hash routes already create real browser history,
-// so Back should simply move to the previous hash/page. The click guard below asks first.
+function returnHome(){
+  active=false;finished=false;finishedHash='';activeUrl='';bypass=true;
+  try{
+    history.replaceState(null,'',location.pathname+location.search);
+    if(typeof currentGame!=='undefined')currentGame=null;
+    document.querySelectorAll('.pkBoard,.territoryBoard,#timelineBoard,#priceBoard,#lyricBoard,#heroBoard,#musicBoard').forEach(x=>x.remove());
+    if(typeof resetUI==='function')resetUI();
+    const h=document.getElementById('home'),g=document.getElementById('game');
+    if(g)g.style.display='none';if(h)h.style.display='block';
+  }finally{setTimeout(()=>bypass=false,0)}
+}
+// Finish/reveal guard.
 document.addEventListener('click',e=>{if(bypass)return;const btn=e.target.closest('#finish');if(!btn||btn.disabled||!gameVisible())return;const text=(btn.textContent||'').trim();if(!/(交卷|公布答案|結束)/.test(text))return;e.preventDefault();e.stopImmediatePropagation();if(!confirmReveal())return;bypass=true;try{btn.click();markFinished()}finally{bypass=false}},true);
-document.addEventListener('click',e=>{if(bypass||!active||finished||!gameVisible())return;const back=e.target.closest('.back');if(!back)return;e.preventDefault();e.stopImmediatePropagation();if(!confirmLeave())return;active=false;activeUrl='';bypass=true;location.hash='';setTimeout(()=>bypass=false,0)},true);
+// The in-page ‹ is deterministic: cancel leaves the current DOM untouched; confirm returns directly to the cabinet.
+// It deliberately does not use history.back(), location.hash, popstate or hashchange.
+document.addEventListener('click',e=>{if(bypass)return;const back=e.target.closest('.back');if(!back||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();if(active&&!finished&&!confirmLeave())return;returnHome()},true);
 window.addEventListener('beforeunload',e=>{if(!active||finished||bypass)return;e.preventDefault();e.returnValue=''});
 window.addEventListener('hashchange',()=>{if(active&&!finished&&gameVisible()&&location.href!==activeUrl){active=false;activeUrl=''}setTimeout(autoGuard,0)});
 const guardObserver=new MutationObserver(()=>{autoGuard();const f=document.getElementById('finish'),g=document.getElementById('go');if(active&&gameVisible()&&f&&g&&f.disabled&&g.disabled)markFinished()});guardObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','disabled']});
