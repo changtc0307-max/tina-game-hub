@@ -5,29 +5,27 @@ function confirmReveal(message){return window.confirm(message||'確定要公布�
 function confirmLeave(){return window.confirm('確定要離開這局嗎？\n目前的作答進度與已公布答案會消失。')}
 function markActive(){active=true;finished=false;finishedHash='';activeUrl=location.href}
 function markFinished(){finished=true;active=false;finishedHash=location.hash;activeUrl=''}
-window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished};
+function requestLeave(){return !active||finished||!gameVisible()||confirmLeave()}
+function clearLeave(){active=false;finished=false;finishedHash='';activeUrl=''}
+window.TinaGuard={confirmReveal,confirmLeave,markActive,markFinished,requestLeave,clearLeave};
 function autoGuard(){if(gameVisible()&&location.hash&&location.hash!==finishedHash&&!active&&!finished)markActive()}
 function returnHome(){
-  active=false;finished=false;finishedHash='';activeUrl='';bypass=true;
+  if(!requestLeave())return;
+  clearLeave();bypass=true;
   try{
     if(window.TinaRouter&&typeof TinaRouter.home==='function')TinaRouter.home();
-    else{
-      history.replaceState(null,'',location.pathname+location.search);
-      if(typeof currentGame!=='undefined')currentGame=null;
-      if(typeof resetUI==='function')resetUI();
-      const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block';
-    }
+    else{history.replaceState(null,'',location.pathname+location.search);if(typeof currentGame!=='undefined')currentGame=null;if(typeof resetUI==='function')resetUI();const h=document.getElementById('home'),g=document.getElementById('game');if(g)g.style.display='none';if(h)h.style.display='block'}
   }finally{setTimeout(()=>bypass=false,0)}
 }
 document.addEventListener('click',e=>{if(bypass)return;const btn=e.target.closest('#finish');if(!btn||btn.disabled||!gameVisible())return;const text=(btn.textContent||'').trim();if(!/(交卷|公布答案|結束)/.test(text))return;e.preventDefault();e.stopImmediatePropagation();if(!confirmReveal())return;bypass=true;try{btn.click();markFinished()}finally{bypass=false}},true);
-document.addEventListener('click',e=>{if(bypass)return;const back=e.target.closest('.back');if(!back||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();if(active&&!finished&&!confirmLeave())return;returnHome()},true);
-// Do not install beforeunload: on iOS Safari it can consume the browser's native Back navigation and leave the in-page guard in a stale state.
+document.addEventListener('click',e=>{if(bypass)return;const back=e.target.closest('.back');if(!back||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();returnHome()},true);
+// Native Safari Back is guarded from the router's user-gesture history entry. No beforeunload is used.
 window.addEventListener('hashchange',()=>{if(active&&!finished&&gameVisible()&&location.href!==activeUrl){active=false;activeUrl=''}setTimeout(autoGuard,0)});
 window.addEventListener('pageshow',()=>setTimeout(autoGuard,0));
 const guardObserver=new MutationObserver(()=>{autoGuard();const f=document.getElementById('finish'),g=document.getElementById('go');if(active&&gameVisible()&&f&&g&&f.disabled&&g.disabled)markFinished()});guardObserver.observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','disabled']});
 setTimeout(autoGuard,0);
-const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-8';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-8';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-8';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-8';document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
-const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-8';document.head.appendChild(priceExtra);
+const musicExtra=document.createElement('script');musicExtra.src='music-extra.js?v=20260915-9';musicExtra.onload=()=>{const lyrics=document.createElement('script');lyrics.src='lyrics-game.js?v=20260915-9';lyrics.onload=()=>{const extra=document.createElement('script');extra.src='lyrics-extra.js?v=20260915-9';extra.onload=()=>{const ui=document.createElement('script');ui.src='lyrics-ui.js?v=20260915-9';document.head.appendChild(ui)};document.head.appendChild(extra)};document.head.appendChild(lyrics)};document.head.appendChild(musicExtra);
+const priceExtra=document.createElement('script');priceExtra.src='pricing-extra.js?v=20260915-9';document.head.appendChild(priceExtra);
 const musicIds=['831','bestards','cosmos','samlee','fahrenheit','sasha'];
 function fixBaseMusicRoute(){const q=(location.hash||'').slice(1);if(!musicIds.includes(q)||typeof MUSIC_GAMES==='undefined'||!MUSIC_GAMES[q])return;const controls=document.querySelector('.controls'),score=document.querySelector('.score');const needs=q==='fahrenheit'||q==='sasha'||!gameVisible()||controls?.style.display==='none'||!document.getElementById('musicBoard');if(!needs)return;currentGame=q;resetUI();if(controls)controls.style.display='block';if(score)score.style.display='block';home.style.display='none';game.style.display='flex';musicGame(q)}
 window.addEventListener('hashchange',()=>setTimeout(fixBaseMusicRoute,0));musicExtra.addEventListener('load',()=>setTimeout(fixBaseMusicRoute,0));
