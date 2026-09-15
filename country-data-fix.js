@@ -11,20 +11,30 @@ window.fetch=async function(input,init){const raw=typeof input==='string'?input:
 const duplicateCodes=DATA.map(x=>x.code).filter((x,i,a)=>a.indexOf(x)!==i),duplicateIds=DATA.map(x=>x.id).filter((x,i,a)=>a.indexOf(x)!==i);if(DATA.length!==197||duplicateCodes.length||duplicateIds.length)console.warn('Country roster audit warning',{count:DATA.length,duplicateCodes,duplicateIds});
 })();
 
-// Safari-safe navigation guard. This block intentionally runs before app.js and all
-// other hash routers, so cancelled Back navigation cannot erase an in-progress game.
+// Navigation guard: never intercept entry into a game. It becomes active only after
+// a game route has rendered, so normal card/button handlers and dynamic music menus work.
 (()=>{
-let active=false,finished=false,restoring=false,bypass=false,gameUrl='';
+let active=false,finished=false,bypass=false,previousHash='';
 const gameVisible=()=>{const g=document.getElementById('game');return !!g&&getComputedStyle(g).display!=='none'};
 const confirmLeave=()=>window.confirm('確定要離開這局嗎？\n目前的作答進度與已公布答案會消失。');
 const confirmReveal=msg=>window.confirm(msg||'確定要公布答案嗎？\n公布後這局就會結束，無法繼續作答。');
-function markActive(){active=true;finished=false;gameUrl=location.href}
-function markFinished(){finished=true;active=false;gameUrl=''}
+function markActive(){active=true;finished=false}
+function markFinished(){finished=true;active=false}
 window.TinaGuard={confirmLeave,confirmReveal,markActive,markFinished};
-function routeFromTarget(target){if(target?.dataset?.hash)return target.dataset.hash;if(target?.tagName==='A'){const h=target.getAttribute('href')||'';if(h.startsWith('#'))return h.slice(1)}const card=target?.closest?.('.card'),key=(card?.getAttribute('href')||'').replace(/^#/,'');if(!key)return'';return target.classList?.contains('pkBtn')?'pk-'+key:key}
-document.addEventListener('click',e=>{if(bypass||gameVisible())return;const target=e.target.closest('#home button[data-hash],#home .modeBtns button,#home a.card');if(!target)return;const route=routeFromTarget(target);if(!route)return;e.preventDefault();e.stopImmediatePropagation();const old=location.href;history.pushState({tinaGame:true,route},'','#'+route);markActive();window.dispatchEvent(new HashChangeEvent('hashchange',{oldURL:old,newURL:location.href}))},true);
-window.addEventListener('popstate',e=>{if(bypass)return;if(restoring){e.stopImmediatePropagation();return}if(!active||finished)return;e.stopImmediatePropagation();if(confirmLeave()){active=false;gameUrl='';window.dispatchEvent(new HashChangeEvent('hashchange',{oldURL:'',newURL:location.href}))}else{restoring=true;history.forward();setTimeout(()=>restoring=false,350)}},true);
-window.addEventListener('hashchange',e=>{if(restoring)e.stopImmediatePropagation()},true);
-document.addEventListener('click',e=>{const back=e.target.closest('.back');if(!back||bypass||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();if(active&&!finished&&!confirmLeave())return;active=false;finished=false;gameUrl='';bypass=true;history.back();setTimeout(()=>bypass=false,300)},true);
+
+// Record the route we came from, but do not prevent, stop or synthesize the entry click.
+document.addEventListener('click',e=>{if(gameVisible())return;const t=e.target.closest('#home a.card,#home button[data-hash],#home .modeBtns button');if(!t)return;previousHash=location.hash||''},true);
+
+// Once a game is actually visible, arm protection. No pushState is created here.
+const observer=new MutationObserver(()=>{if(!active&&!finished&&gameVisible()&&location.hash)markActive()});
+observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['style']});
+window.addEventListener('hashchange',()=>setTimeout(()=>{if(!active&&!finished&&gameVisible()&&location.hash)markActive()},0));
+
+// In-page back is fully controlled and always has a deterministic fallback to home.
+document.addEventListener('click',e=>{const back=e.target.closest('.back');if(!back||bypass||!gameVisible())return;e.preventDefault();e.stopImmediatePropagation();if(active&&!finished&&!confirmLeave())return;active=false;finished=false;bypass=true;location.hash=previousHash&&previousHash!==location.hash?previousHash:'';setTimeout(()=>bypass=false,50)},true);
+
+// Browser Back cannot be cancelled reliably on every Safari history shape without
+// corrupting routing. Ask when popstate fires; if confirmed let the destination render.
+window.addEventListener('popstate',e=>{if(bypass||!active||finished)return;if(!confirmLeave()){history.forward();return}active=false;finished=false},true);
 window.addEventListener('beforeunload',e=>{if(active&&!finished&&!bypass){e.preventDefault();e.returnValue=''}});
 })();
