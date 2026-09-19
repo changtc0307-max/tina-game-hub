@@ -7,4 +7,4 @@ const AOV_GROUPS={
 '輔助':'愛麗絲 克萊斯 夸克 朗博 海倫 提米 安奈特 皮皮 卡瑞茲 若伊 芽芽'.split(' ')
 };
 const AOV_HEROES=Object.entries(AOV_GROUPS).flatMap(([role,names])=>names.map(name=>({name,role,group:role})));
-const aovHpScript=document.createElement('script');aovHpScript.src='aov-hp.js?v=20260919-1';document.head.appendChild(aovHpScript);
+const aovHpScript=document.createElement('script');aovHpScript.src='aov-hp.js?v=20260919-2';document.head.appendChild(aovHpScript);
